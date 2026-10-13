@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0b2e2a" />
+<title>Gerador de códigos · Vivaz</title>
+<style>
+  @font-face { font-family: "Inter"; font-weight: 100 900; src: url("../fonts/inter.woff2") format("woff2"); }
+  :root { --brand: #01af96; --deep: #0b2e2a; --mint: #eef9f6; --line: #dde6e3; --muted: #5f7570; --red: #a32a19; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; font-family: "Inter", system-ui, sans-serif; color: #10201d;
+    background: radial-gradient(700px 300px at 90% -100px, rgba(1,175,150,.18), transparent 70%), #f2f5f3; }
+  main { max-width: 520px; margin: 0 auto; padding: calc(24px + env(safe-area-inset-top)) 16px 40px; display: grid; gap: 16px; }
+  .logo { color: var(--brand); width: 150px; }
+  .logo svg { width: 100%; height: auto; display: block; }
+  h1 { font-size: 1.7rem; margin: 0; letter-spacing: -.02em; }
+  p { margin: 0; color: var(--muted); line-height: 1.5; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 22px; padding: 18px; display: grid; gap: 14px;
+    box-shadow: 0 14px 34px -14px rgba(11,46,42,.22); }
+  label { display: grid; gap: 6px; font-weight: 650; font-size: .88rem; color: #44605a; }
+  input { font: inherit; font-size: 1rem; min-height: 50px; padding: 0 14px; border-radius: 14px; border: 1.5px solid transparent; background: #eef3f1; width: 100%; }
+  input:focus { outline: none; border-color: var(--brand); background: #fff; }
+  button { font: inherit; font-weight: 700; min-height: 50px; border-radius: 16px; border: 0; cursor: pointer; padding: 0 18px; }
+  .primary { background: var(--deep); color: #fff; }
+  .soft { background: var(--mint); color: #00705f; border: 1px solid #d8f3ec; }
+  .erro { color: var(--red); font-weight: 600; font-size: .9rem; }
+  .ok { color: #00705f; font-weight: 650; }
+  .codigo { white-space: pre-wrap; font-family: ui-monospace, Consolas, monospace; font-size: .8rem; background: #eef3f1; border-radius: 12px; padding: 12px; overflow-wrap: anywhere; color: #10201d; }
+  .linha { display: flex; gap: 8px; flex-wrap: wrap; }
+  .linha button { flex: 1; }
+  .escondido { display: none !important; }
+  small { color: var(--muted); font-size: .8rem; line-height: 1.4; }
+</style>
+</head>
+<body>
+<main>
+  <div class="logo" id="logo"></div>
+  <h1>Gerador de códigos de ativação</h1>
+  <p>Para cada estúdio que comprar o app: digite o nome, gere o código e mande pelo WhatsApp.</p>
+
+  <!-- 1. senha -->
+  <form class="card" id="passo-senha">
+    <label>Sua senha
+      <input autocomplete="current-password" id="senha" type="password" placeholder="Senha do gerador" />
+    </label>
+    <button class="primary" type="submit">Entrar</button>
+    <span class="erro escondido" id="erro-senha">Senha errada. Confira e tente de novo.</span>
+    <small>A senha não fica salva em lugar nenhum. Ela só destranca o carimbo, aqui neste aparelho.</small>
+  </form>
+
+  <!-- 2. gerar -->
+  <form class="card escondido" id="passo-gerar">
+    <label>Nome do estúdio comprador
+      <input id="nome" maxlength="40" placeholder="Ex.: Studio Equilíbrio" />
+    </label>
+    <small>Esse nome fica fixo no app do comprador e sai na marca do PDF. Confira a grafia.</small>
+    <button class="primary" type="submit">Gerar código</button>
+  </form>
+
+  <!-- 3. resultado -->
+  <section class="card escondido" id="resultado">
+    <span class="ok" id="titulo-resultado"></span>
+    <p>Mande esta mensagem para o comprador. Ele toca no link, e o app já abre ativado.</p>
+    <div class="codigo" id="mensagem"></div>
+    <div class="linha">
+      <button class="primary" id="copiar-mensagem" type="button">Copiar mensagem</button>
+      <button class="soft" id="whatsapp" type="button">Abrir no WhatsApp</button>
+    </div>
+    <details>
+      <summary><small>Só o código (para colar no app)</small></summary>
+      <div class="codigo" id="codigo"></div>
+      <button class="soft" id="copiar-codigo" type="button" style="margin-top:8px;width:100%">Copiar só o código</button>
+    </details>
+  </section>
+</main>
+
+<script src="nacl.min.js"></script>
+<script>
+  // Link do app que vai na mensagem: a pasta acima deste gerador (ex.: https://…github.io/).
+  const LINK_APP = new URL("../", location.href).href;
+  const $ = (id) => document.getElementById(id);
+  const b64ToBytes = (t) => Uint8Array.from(atob(t.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(t.length / 4) * 4, "=")), (c) => c.charCodeAt(0));
+  const bytesToB64 = (b) => btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  let secreta = null; // só na memória desta aba
+
+  fetch("logo.svg").then((r) => r.text()).then((svg) => ($("logo").innerHTML = svg)).catch(() => {});
+
+  $("passo-senha").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("erro-senha").classList.add("escondido");
+    try {
+      const t = await (await fetch("chave-trancada.json", { cache: "no-store" })).json();
+      const base = await crypto.subtle.importKey("raw", new TextEncoder().encode($("senha").value), "PBKDF2", false, ["deriveKey"]);
+      const chave = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64ToBytes(t.sal), iterations: t.rodadas, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+      secreta = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(t.iv) }, chave, b64ToBytes(t.cifrado)));
+      $("senha").value = "";
+      $("passo-senha").classList.add("escondido");
+      $("passo-gerar").classList.remove("escondido");
+      $("nome").focus();
+    } catch {
+      $("erro-senha").classList.remove("escondido");
+    }
+  });
+
+  $("passo-gerar").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const nome = $("nome").value.trim().replace(/\s+/g, " ");
+    if (nome.length < 2) return $("nome").focus();
+    const dados = new TextEncoder().encode(JSON.stringify({ v: 1, n: nome, d: new Date().toISOString().slice(0, 10), t: "c" }));
+    const codigo = `${bytesToB64(dados)}.${bytesToB64(nacl.sign.detached(dados, secreta))}`;
+    const link = `${LINK_APP}?ativar=${codigo}`;
+    const mensagem = `Olá! Seu app Ficha de Evolução está pronto.\n\n1. Toque no link abaixo (no iPhone, abra pelo Safari; no Android, pelo Chrome):\n${link}\n\n2. O app abre já ativado para ${nome}. Depois é só instalar na tela inicial.\n\nGuarde esta mensagem: o link também serve para instalar de novo.`;
+    $("titulo-resultado").textContent = `Código gerado para ${nome}`;
+    $("mensagem").textContent = mensagem;
+    $("codigo").textContent = codigo;
+    $("resultado").classList.remove("escondido");
+    $("resultado").scrollIntoView({ behavior: "smooth" });
+    $("copiar-mensagem").onclick = () => copiar(mensagem, "copiar-mensagem");
+    $("copiar-codigo").onclick = () => copiar(codigo, "copiar-codigo");
+    $("whatsapp").onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, "_blank");
+  });
+
+  async function copiar(texto, botao) {
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      const area = document.createElement("textarea");
+      area.value = texto; document.body.appendChild(area); area.select(); document.execCommand("copy"); area.remove();
+    }
+    const b = $(botao), antes = b.textContent;
+    b.textContent = "Copiado ✓";
+    setTimeout(() => (b.textContent = antes), 1800);
+  }
+</script>
+</body>
+</html>
