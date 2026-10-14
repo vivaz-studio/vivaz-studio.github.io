@@ -1,4 +1,4 @@
-# Ficha de Evolução — Vivaz Studio
+# Ficha de Evolução
 
 Aplicativo publicado em https://vivaz-studio.github.io
 

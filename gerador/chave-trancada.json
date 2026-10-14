@@ -1,8 +1,8 @@
 {
-  "v": 1,
+  "v": 2,
   "rodadas": 600000,
-  "sal": "-u-ZmyN9_tcmz0o5-3gjzw",
-  "iv": "wxu2wNE8tA6V_sde",
-  "cifrado": "lt2Wf9koMgZqGjpQQONqFbxHGlpMHhhITVc0K6MTdry5ZPfR6eVq8XXzpwOzXkfL3E4iKu6ocR8CcRZzZEx013-YH8ceA1TBiEJIxyILEfY",
+  "sal": "JcRdobK347xcEfUmcs8aAA",
+  "iv": "2QLz7s6hsAZ4b1HS",
+  "cifrado": "qDXni2rG42sMr3Spe1I3c3adgC19OFPnwwBFvk2L1ye67j6i1rpJDtIdzkLiKbI4bVMWErEyLeYMba4WIOm42rr4rv8G6gi7sCX3lDwXfV8",
   "publica": "LMma5M8M6hXzQmt9fz1rrM9PrOYXUAO14zQSmNIs8mc"
 }

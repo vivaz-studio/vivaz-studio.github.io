@@ -113,7 +113,9 @@
     $("entrar").textContent = "Conferindo…";
     try {
       const t = await (await fetch("chave-trancada.json", { cache: "no-store" })).json();
-      const base = await crypto.subtle.importKey("raw", new TextEncoder().encode($("senha").value.trim()), "PBKDF2", false, ["deriveKey"]);
+      // versão 2: tanto faz maiúscula/minúscula, tracinhos e espaços (DXF4-AP2D-K7QM = dxf4 ap2d k7qm)
+      const digitada = t.v >= 2 ? $("senha").value.toUpperCase().replace(/[\s-]/g, "") : $("senha").value.trim();
+      const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(digitada), "PBKDF2", false, ["deriveKey"]);
       const chave = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64ToBytes(t.sal), iterations: t.rodadas, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
       secreta = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(t.iv) }, chave, b64ToBytes(t.cifrado)));
       $("senha").value = "";
