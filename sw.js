@@ -1,4 +1,4 @@
-const CACHE_NAME = "ficha-evolucao-v6";
+const CACHE_NAME = "ficha-evolucao-v7";
 // Cartão de instalação e ícones da marca do cliente (gravados pela página, ver src/theme.ts): não apagar.
 const CACHE_MARCA = "ficha-marca";
 const APP_SHELL = [
@@ -39,6 +39,11 @@ function saveCopy(request, response) {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
+    return;
+  }
+
+  // APK do Android: sempre direto da internet (nunca guardar uma versão velha)
+  if (new URL(event.request.url).pathname.includes("/android/")) {
     return;
   }
 
