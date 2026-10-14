@@ -1,8 +1,7 @@
-const CACHE_NAME = "ficha-evolucao-v4";
+const CACHE_NAME = "ficha-evolucao-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./manifest.webmanifest",
   "./icon.svg",
   "./fonts/inter.woff2",
   "./fonts/bricolage.woff2",
