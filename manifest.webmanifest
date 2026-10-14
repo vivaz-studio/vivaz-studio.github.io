@@ -2,7 +2,6 @@
   "name": "Ficha de Evolução Digital",
   "short_name": "Vivaz",
   "description": "Registro de evolução de sessões com armazenamento local, PDF e backup.",
-  "start_url": "./",
   "display": "standalone",
   "background_color": "#F2F5F3",
   "theme_color": "#0B2E2A",
