@@ -135,7 +135,7 @@
     const dados = new TextEncoder().encode(JSON.stringify({ v: 1, n: nome, d: new Date().toISOString().slice(0, 10), t: "c" }));
     const codigo = `${bytesToB64(dados)}.${bytesToB64(nacl.sign.detached(dados, secreta))}`;
     const link = `${LINK_APP}?ativar=${codigo}`;
-    const mensagem = `Olá! Seu app Ficha de Evolução está pronto.\n\n1. Toque no link abaixo (no iPhone, abra pelo Safari; no Android, pelo Chrome):\n${link}\n\n2. O app abre já ativado para ${nome}. Depois é só instalar na tela inicial.\n\nGuarde esta mensagem: o link também serve para instalar de novo.`;
+    const mensagem = `Olá! Seu app Ficha de Evolução está pronto.\n\n1. Toque no link abaixo (no iPhone, abra pelo Safari; no Android, pelo Chrome):\n${link}\n\n2. O app abre já ativado para ${nome} e mostra como colocar ele na tela inicial. Siga os passos e, depois, abra sempre pelo ícone.\n\nGuarde esta mensagem: o link também serve para instalar de novo.`;
     $("titulo-resultado").textContent = `Código gerado para ${nome}`;
     $("mensagem").textContent = mensagem;
     $("codigo").textContent = codigo;
