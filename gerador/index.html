@@ -31,6 +31,12 @@
   .linha { display: flex; gap: 8px; flex-wrap: wrap; }
   .linha button { flex: 1; }
   .escondido { display: none !important; }
+  .senha-caixa { position: relative; display: block; }
+  .senha-caixa input { padding-right: 56px; }
+  .olho { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); min-height: 44px; width: 48px; padding: 0;
+    background: none; color: #44605a; display: grid; place-items: center; border-radius: 12px; }
+  .olho.ligado { color: #00705f; background: #eef9f6; }
+  button:disabled { opacity: .6; }
   small { color: var(--muted); font-size: .8rem; line-height: 1.4; }
 </style>
 </head>
@@ -43,9 +49,14 @@
   <!-- 1. senha -->
   <form class="card" id="passo-senha">
     <label>Sua senha
-      <input autocomplete="current-password" id="senha" type="password" placeholder="Senha do gerador" />
+      <span class="senha-caixa">
+        <input autocapitalize="off" autocomplete="current-password" autocorrect="off" id="senha" spellcheck="false" type="password" placeholder="Senha do gerador" />
+        <button aria-label="Mostrar senha" class="olho" id="olho" type="button">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </span>
     </label>
-    <button class="primary" type="submit">Entrar</button>
+    <button class="primary" id="entrar" type="submit">Entrar</button>
     <span class="erro escondido" id="erro-senha">Senha errada. Confira e tente de novo.</span>
     <small>A senha não fica salva em lugar nenhum. Ela só destranca o carimbo, aqui neste aparelho.</small>
   </form>
@@ -85,14 +96,24 @@
   const bytesToB64 = (b) => btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   let secreta = null; // só na memória desta aba
 
+  // olhinho: mostra/esconde a senha para conferir
+  $("olho").addEventListener("click", () => {
+    const visivel = $("senha").type === "text";
+    $("senha").type = visivel ? "password" : "text";
+    $("olho").classList.toggle("ligado", !visivel);
+    $("olho").setAttribute("aria-label", visivel ? "Mostrar senha" : "Esconder senha");
+  });
+
   fetch("logo.svg").then((r) => r.text()).then((svg) => ($("logo").innerHTML = svg)).catch(() => {});
 
   $("passo-senha").addEventListener("submit", async (e) => {
     e.preventDefault();
     $("erro-senha").classList.add("escondido");
+    $("entrar").disabled = true;
+    $("entrar").textContent = "Conferindo…";
     try {
       const t = await (await fetch("chave-trancada.json", { cache: "no-store" })).json();
-      const base = await crypto.subtle.importKey("raw", new TextEncoder().encode($("senha").value), "PBKDF2", false, ["deriveKey"]);
+      const base = await crypto.subtle.importKey("raw", new TextEncoder().encode($("senha").value.trim()), "PBKDF2", false, ["deriveKey"]);
       const chave = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64ToBytes(t.sal), iterations: t.rodadas, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
       secreta = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(t.iv) }, chave, b64ToBytes(t.cifrado)));
       $("senha").value = "";
@@ -101,6 +122,9 @@
       $("nome").focus();
     } catch {
       $("erro-senha").classList.remove("escondido");
+    } finally {
+      $("entrar").disabled = false;
+      $("entrar").textContent = "Entrar";
     }
   });
 
