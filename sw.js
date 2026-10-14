@@ -1,4 +1,6 @@
-const CACHE_NAME = "ficha-evolucao-v5";
+const CACHE_NAME = "ficha-evolucao-v6";
+// Cartão de instalação e ícones da marca do cliente (gravados pela página, ver src/theme.ts): não apagar.
+const CACHE_MARCA = "ficha-marca";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -21,7 +23,7 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
+        Promise.all(keys.filter((key) => key !== CACHE_NAME && key !== CACHE_MARCA).map((key) => caches.delete(key))),
       ),
   );
   self.clients.claim();
