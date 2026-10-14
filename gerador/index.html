@@ -137,7 +137,21 @@
     const dados = new TextEncoder().encode(JSON.stringify({ v: 1, n: nome, d: new Date().toISOString().slice(0, 10), t: "c" }));
     const codigo = `${bytesToB64(dados)}.${bytesToB64(nacl.sign.detached(dados, secreta))}`;
     const link = `${LINK_APP}?ativar=${codigo}`;
-    const mensagem = `Olá! Seu app Ficha de Evolução está pronto.\n\n1. Toque no link abaixo (no iPhone, abra pelo Safari; no Android, pelo Chrome):\n${link}\n\n2. O app abre já ativado para ${nome} e mostra como colocar ele na tela inicial. Siga os passos e, depois, abra sempre pelo ícone.\n\nGuarde esta mensagem: o link também serve para instalar de novo.`;
+    const mensagem = [
+      `Olá! Seu app *Ficha de Evolução* está pronto, já liberado para *${nome}*.`,
+      ``,
+      `*1.* Toque no seu link pessoal:`,
+      link,
+      `(No iPhone, abra pelo *Safari*. No Android, pelo *Chrome*. Se abrir dentro do WhatsApp, toque nos 3 pontinhos e escolha "Abrir no navegador".)`,
+      ``,
+      `*2.* O app abre e mostra como instalar. Siga a tela:`,
+      `• *iPhone:* botão Compartilhar → "Adicionar à Tela de Início" → Adicionar.`,
+      `• *Android:* toque em "Instalar app". Se não aparecer, toque em "Baixar o app para Android", depois em Abrir → Instalar (se o celular avisar, toque em "Instalar assim mesmo").`,
+      ``,
+      `*3.* Abra sempre pelo ícone *Ficha de Evolução* na tela inicial.`,
+      ``,
+      `Guarde esta mensagem: o link serve para instalar de novo se trocar de celular.`,
+    ].join("\n");
     $("titulo-resultado").textContent = `Código gerado para ${nome}`;
     $("mensagem").textContent = mensagem;
     $("codigo").textContent = codigo;
