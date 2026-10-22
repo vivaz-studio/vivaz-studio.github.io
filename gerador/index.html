@@ -44,7 +44,7 @@
 <main>
   <div class="logo" id="logo"></div>
   <h1>Gerador de códigos de ativação</h1>
-  <p>Para cada cliente que comprar o app: digite o nome, gere o código e mande pelo WhatsApp.</p>
+  <p>Para cada cliente que comprar o app: digite o nome e o CPF ou CNPJ, gere o código e mande pelo WhatsApp.</p>
 
   <!-- 1. senha -->
   <form class="card" id="passo-senha">
@@ -67,6 +67,11 @@
       <input id="nome" maxlength="40" placeholder="Ex.: Clínica Equilíbrio" />
     </label>
     <small>Esse nome fica fixo no app do comprador e sai na marca do PDF. Confira a grafia.</small>
+    <label>CPF ou CNPJ do comprador
+      <input id="documento" inputmode="numeric" maxlength="18" placeholder="000.000.000-00 ou 00.000.000/0000-00" />
+    </label>
+    <small>Fica guardado no código, para saber para quem a licença foi vendida (aparece em Mais → Sobre e licença). Não sai no PDF.</small>
+    <span class="erro escondido" id="erro-documento">CPF ou CNPJ inválido. Confira os números.</span>
     <button class="primary" type="submit">Gerar código</button>
   </form>
 
@@ -130,11 +135,39 @@
     }
   });
 
+  // CPF ou CNPJ: só números, formatado enquanto digita, conferido pelos dígitos verificadores
+  const soNumeros = (t) => t.replace(/\D/g, "");
+  const formatarDocumento = (t) => {
+    const d = soNumeros(t).slice(0, 14);
+    if (d.length <= 11) return d.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    return d.replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+  };
+  const cpfValido = (d) => {
+    if (d.length !== 11 || /^(\d)\1+$/.test(d)) return false;
+    const dv = (n) => { let s = 0; for (let i = 0; i < n; i++) s += Number(d[i]) * (n + 1 - i); const r = (s * 10) % 11; return r === 10 ? 0 : r; };
+    return dv(9) === Number(d[9]) && dv(10) === Number(d[10]);
+  };
+  const cnpjValido = (d) => {
+    if (d.length !== 14 || /^(\d)\1+$/.test(d)) return false;
+    const dv = (n) => { const pesos = n === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]; const s = pesos.reduce((a, p, i) => a + p * Number(d[i]), 0); const r = s % 11; return r < 2 ? 0 : 11 - r; };
+    return dv(12) === Number(d[12]) && dv(13) === Number(d[13]);
+  };
+  $("documento").addEventListener("input", (e) => {
+    e.target.value = formatarDocumento(e.target.value);
+    $("erro-documento").classList.add("escondido");
+  });
+
   $("passo-gerar").addEventListener("submit", (e) => {
     e.preventDefault();
     const nome = $("nome").value.trim().replace(/\s+/g, " ");
     if (nome.length < 2) return $("nome").focus();
-    const dados = new TextEncoder().encode(JSON.stringify({ v: 1, n: nome, d: new Date().toISOString().slice(0, 10), t: "c" }));
+    const doc = soNumeros($("documento").value);
+    if (!(cpfValido(doc) || cnpjValido(doc))) {
+      $("erro-documento").classList.remove("escondido");
+      return $("documento").focus();
+    }
+    const documento = formatarDocumento(doc);
+    const dados = new TextEncoder().encode(JSON.stringify({ v: 1, n: nome, d: new Date().toISOString().slice(0, 10), t: "c", c: documento }));
     const codigo = `${bytesToB64(dados)}.${bytesToB64(nacl.sign.detached(dados, secreta))}`;
     const link = `${LINK_APP}?ativar=${codigo}`;
     const mensagem = [
@@ -156,7 +189,7 @@
       ``,
       `Guarde esta mensagem: o link serve para instalar de novo se trocar de celular.`,
     ].join("\n");
-    $("titulo-resultado").textContent = `Código gerado para ${nome}`;
+    $("titulo-resultado").textContent = `Código gerado para ${nome} (${doc.length > 11 ? "CNPJ" : "CPF"} ${documento})`;
     $("mensagem").textContent = mensagem;
     $("codigo").textContent = codigo;
     $("resultado").classList.remove("escondido");
