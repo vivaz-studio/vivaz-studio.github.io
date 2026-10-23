@@ -1,10 +1,12 @@
 // Service worker da versão navegador (app novo, 21/10/2026): o app funciona sem internet.
 // Substitui o do app antigo (mesmo endereço): o nome do cache mudou, então os arquivos guardados do app
 // antigo são apagados ao ativar — nenhum celular fica preso na versão velha.
-const CACHE_NAME = "ficha-evolucao-v8";
+// v9 (22/10/2026): fontes leves em /fonts (nome fixo: ao trocar uma fonte, subir este número)
+const CACHE_NAME = "ficha-evolucao-v9";
 // Cartão de instalação e ícones da marca do cliente (gravados pela página, ver src/lib/marca.web.ts): não apagar.
 const CACHE_MARCA = "ficha-marca";
-const APP_SHELL = ["./", "./index.html", "./android/icone-app.png", "./apple-touch-icon.png"];
+const FONTES = ["Inter_400Regular", "Inter_500Medium", "Inter_600SemiBold", "Inter_700Bold", "BricolageGrotesque_700Bold", "BricolageGrotesque_800ExtraBold"].map((f) => `./fonts/${f}.woff2`);
+const APP_SHELL = ["./", "./index.html", "./android/icone-app.png", "./apple-touch-icon.png", ...FONTES];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
