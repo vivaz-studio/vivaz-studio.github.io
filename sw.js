@@ -2,7 +2,8 @@
 // Substitui o do app antigo (mesmo endereço): o nome do cache mudou, então os arquivos guardados do app
 // antigo são apagados ao ativar — nenhum celular fica preso na versão velha.
 // v9 (22/10/2026): fontes leves em /fonts (nome fixo: ao trocar uma fonte, subir este número)
-const CACHE_NAME = "ficha-evolucao-v9";
+// v10 (28/10/2026): ícone novo Evolui Pilates (ícones têm nome fixo: ao trocar, subir este número)
+const CACHE_NAME = "ficha-evolucao-v10";
 // Cartão de instalação e ícones da marca do cliente (gravados pela página, ver src/lib/marca.web.ts): não apagar.
 const CACHE_MARCA = "ficha-marca";
 const FONTES = ["Inter_400Regular", "Inter_500Medium", "Inter_600SemiBold", "Inter_700Bold", "BricolageGrotesque_700Bold", "BricolageGrotesque_800ExtraBold"].map((f) => `./fonts/${f}.woff2`);
