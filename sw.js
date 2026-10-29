@@ -39,9 +39,11 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   // A página do app: com internet, sempre a versão nova; sem internet, a guardada.
+  // "no-store" (29/10/2026): sem isso o navegador usava a página guardada por até 10 min (o GitHub manda
+  // max-age=600); depois de uma publicação ela pedia arquivos que já não existem e o app abria em branco.
   if (event.request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request.url, { cache: "no-store", credentials: "same-origin" })
         .then((response) => guardarCopia(event.request, response))
         .catch(() => caches.match(event.request).then((cached) => cached ?? caches.match("./"))),
     );
